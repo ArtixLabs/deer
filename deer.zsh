@@ -13,7 +13,7 @@ ERRORS=(
   FILE_NOT_EXIST
   GIT_REPO_NOT_ALLOWED
 )
-INFO_MSGS=(
+_info_MSGS=(
   CLONING
   INSTALLING
 )
@@ -34,7 +34,7 @@ if [ ! -d "$DEER_PLUG_DIR" ]; then
 fi
 
 
-function die() {
+function _die() {
   case "$1" in 
     (FILE_NOT_EXIST)
       echo -e "$color[red]$color[bold]ERROR: File: \"$color[reset]$color[bold]$2$color[red]\" does not exist.$color[reset]" 
@@ -44,7 +44,7 @@ function die() {
       return ;;
   esac
 }
-function info() {
+function _info() {
   case "$1" in 
     (CLONING)
       echo -e "$color[bold]$color[blue]Notice: Cloning repository: \"$color[reset]$2$color[bold]$color[blue]\"$color[reset]" ;;
@@ -63,7 +63,7 @@ function deer_try_clone() {
     fi
   done
 }
-function deer_check_clone() {
+function _deer_check_clone() {
   for i in "${ALLOWED_GIT[@]}"
   do
     if $(git ls-remote "$i/$1" CHECK_GIT_REMOTE_URL_REACHABILITY >/dev/null 2>&1)
@@ -75,7 +75,7 @@ function deer_check_clone() {
 }
 
 
-function deer_source_file() {
+function _deer_source_file() {
   if [ -e "$1" ]; then
     source "$1" > /dev/null 2>&1
   fi
@@ -96,21 +96,21 @@ function deerplug() {
           break
         fi
       done
-      info CLONING "$repo"
+      _info CLONING "$repo"
       if $vclone
       then
-        $(git clone "$1" "$DEER_PLUG_DIR/$repo" > /dev/null 2>&1) || die FAILED_TO_INSTALL "$repo"
-        info INSTALLING "$repo"
+        $(git clone "$1" "$DEER_PLUG_DIR/$repo" > /dev/null 2>&1) || _die FAILED_TO_INSTALL "$repo"
+        _info INSTALLING "$repo"
       else
-        if $(deer_check_clone "$1"); then
-          $(git clone "$(deer_try_clone $1)$1" "$DEER_PLUG_DIR/$repo" > /dev/null 2>&1) || die FAILED_TO_INSTALL "$repo"
-          info INSTALLING "$repo"
+        if $(_deer_check_clone "$1"); then
+          $(git clone "$(deer_try_clone $1)$1" "$DEER_PLUG_DIR/$repo" > /dev/null 2>&1) || _die FAILED_TO_INSTALL "$repo"
+          _info INSTALLING "$repo"
         else
-          die FAILED_TO_INSTALL "$repo"
+          _die FAILED_TO_INSTALL "$repo"
         fi
       fi
     fi
-    deer_source_file "$DEER_PLUG_DIR/$repo/$repo.plugin.zsh" || \
-      deer_source_file "$DEER_PLUG_DIR/$repo/$repo.zsh"
+    _deer_source_file "$DEER_PLUG_DIR/$repo/$repo.plugin.zsh" || \
+      _deer_source_file "$DEER_PLUG_DIR/$repo/$repo.zsh"
   fi
 }
