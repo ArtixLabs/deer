@@ -27,7 +27,7 @@ cp deer.zsh ~/.zsh/ && echo -e "source ~/.zsh/deer.zsh" >> ~/.zshrc
 ## Uninstallation
 
 ```sh
-rm -rf ~/.local/share/zap
+rm -rf ~/.local/share/deer
 ```
 
 ## Example usage
@@ -36,6 +36,12 @@ rm -rf ~/.local/share/zap
 deerplug "zsh-users/zsh-autosuggestions"
 deerplug "zsh-users/zsh-syntax-highlighting"
 ```
+
+## Contributing 
+
+New contributors should submit a PR with a short description of their changes.
+
+
 ## Author
 
 **deer** was written by kavulox
