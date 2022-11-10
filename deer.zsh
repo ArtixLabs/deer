@@ -37,17 +37,19 @@ fi
 function die() {
   case "$1" in 
     (FILE_NOT_EXIST)
-      echo -e "$color[red]$color[bold]ERROR: File: \"$color[reset]$color[bold]$2$color[red]\" does not exist.$color[reset]"
-      return
+      echo -e "$color[red]$color[bold]ERROR: File: \"$color[reset]$color[bold]$2$color[red]\" does not exist.$color[reset]" 
+      return ;;
     (GIT_REPO_NOT_ALLOWED)
-      echo -e "$color[red]$color[bold]ERROR: Repository: \"$color[reset]$color[bold]$2$color[red]\" is not currently permitted.$color[reset]"
-      return 
+      echo -e "$color[red]$color[bold]ERROR: Repository: \"$color[reset]$color[bold]$2$color[red]\" is not currently permitted.$color[reset]" 
+      return ;;
   esac
 }
 function info() {
   case "$1" in 
     (CLONING)
-      echo -e "$color[bold]$color[blue]Notice: Cloning repository: \"$color[reset]$color[bold]$2$color[blue]\"$color[reset]"
+      echo -e "$color[bold]$color[blue]Notice: Cloning repository: \"$color[reset]$2$color[bold]$color[blue]\"$color[reset]" ;;
+    (INSTALLING)
+      echo -e "$color[bold]$color[red]Notice: Installing plugin: \"$color[reset]$2$color[bold]$color[red]\"$color[reset]" ;;
   esac
 }
 
@@ -85,10 +87,11 @@ function deerplug() {
     info CLONING "$repo"
     if $vclone
     then
-      echo "e"
-      git clone "$1" "$DEER_PLUG_DIR/$repo" > /dev/null 2>&1 && info INSTALLING "$repo" || die FAILED_TO_INSTALL "$repo"
+      $(git clone "$1" "$DEER_PLUG_DIR/$repo" > /dev/null 2>&1) || die FAILED_TO_INSTALL "$repo"
+      info INSTALLING "$repo"
     else
-      git clone "$(deer_try_clone $1)$1" "$DEER_PLUG_DIR/$repo" > /dev/null 2>&1 && info INSTALLING "$repo" || die FAILED_TO_INSTALL "$repo"
+      $(git clone "$(deer_try_clone $1)$1" "$DEER_PLUG_DIR/$repo" > /dev/null 2>&1) || die FAILED_TO_INSTALL "$repo"
+      info INSTALLING "$repo"
     fi
   fi
   deer_source_file "$DEER_PLUG_DIR/$repo/$repo.plugin.zsh" || \
