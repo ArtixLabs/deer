@@ -24,8 +24,8 @@ red '\e[31m'
 blue '\e[34m'
 )
 # exports
-
-export DEER_PLUG_DIR="$HOME/.local/share/deer"
+export DEER_DIR="$HOME/.local/share/deer"
+export DEER_PLUG_DIR="$HOME/.local/share/deer/plugins"
 
 # preset check
 
@@ -80,7 +80,13 @@ function _deer_source_file() {
     source "$1" > /dev/null 2>&1
   fi
 }
-
+function toggle () {
+  if [ -d "$DEER_DIR/$1" ]; then
+    mv "$DEER_DIR/$1" "$DEER_PLUG_DIR" 
+  elif [ -d "$DEER_PLUG_DIR/$1" ]; then 
+    mv "$DEER_PLUG_DIR/$1" "$DEER_DIR/$1" && mkdir "$DEER_PLUG_DIR/$1"
+  fi
+}
 function deerplug() {
   if [[ "$1" =~ "/" ]] 
   then
