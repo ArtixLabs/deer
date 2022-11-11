@@ -37,9 +37,16 @@ deerplug "zsh-users/zsh-autosuggestions"
 deerplug "zsh-users/zsh-syntax-highlighting"
 ```
 
+## Advanced Commands
+
+```
+deerupdate
+```
 ## Contributing 
 
 New contributors should submit a PR with a short description of their changes.
+
+
 
 
 ## Author
