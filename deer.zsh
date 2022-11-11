@@ -8,6 +8,12 @@ ALLOWED_GIT=(
 )
 
 
+function _deer_wget() {
+  local plug_file=$(echo "$1" | rev | cut -d "/" -f1 | rev)
+  wget "$1" -O "$plug_file"
+  mv "$plug_file" "$DEER_DIR/$plug_file"
+  _deer_try_source "$DEER_DIR/$plug_file"
+}
 
 ERRORS=(
   FILE_NOT_EXIST
@@ -15,10 +21,14 @@ ERRORS=(
 )
 _info_MSGS=(
   CLONING
+  UPDATING
   INSTALLING
+  UPDATE_NOTICE
+  TOGGLE
 )
 typeset -Ag color; color=(
 reset '\e[0m'
+green '\e[32m'
 bold '\e[1m'
 red '\e[31m'
 blue '\e[34m'
@@ -50,6 +60,12 @@ function _info() {
       echo -e "$color[bold]$color[blue]Notice: Cloning repository: \"$color[reset]$2$color[bold]$color[blue]\"$color[reset]" ;;
     (INSTALLING)
       echo -e "$color[bold]$color[red]Notice: Installing plugin: \"$color[reset]$2$color[bold]$color[red]\"$color[reset]" ;;
+    (UPDATING)
+      echo -e "$color[bold]$color[green]Notice: Updating plugin: \"$color[blue]$2$color[bold]$color[green]\"$color[reset]" ;;
+    (UPDATE_NOTICE)
+      echo -e "$color[bold]$color[red]Notice: Plugins that are toggled off will not be updated.$color[reset]" ;;
+    (TOGGLE)
+      echo -e "$color[bold]$color[green]Notice: Toggling plugin: \"$color[blue]$2$color[bold]$color[green]\"$color[reset]" ;;
   esac
 }
 
@@ -83,6 +99,7 @@ function _deer_source_file() {
 function toggle () {
   if [ -d "$DEER_DIR/$1" ]; then
     mv "$DEER_DIR/$1" "$DEER_PLUG_DIR" 
+    _info TOGGLE "$1"
   elif [ -d "$DEER_PLUG_DIR/$1" ]; then 
     mv "$DEER_PLUG_DIR/$1" "$DEER_DIR/$1" && mkdir "$DEER_PLUG_DIR/$1"
   fi
@@ -90,33 +107,49 @@ function toggle () {
 function deerplug() {
   if [[ "$1" =~ "/" ]] 
   then
-    local repo=$(echo "$1" | rev | cut -d "/" -f1 | rev)
-    local vclone=false
-    if [ ! -d "$DEER_PLUG_DIR/$repo" ]
-    then
-      for git_repo in "${ALLOWED_GIT[@]}"
-      do
-        if [[ "$1" =~ "\"$git_repo\"" ]]
-        then
-          vclone=true
-          break
-        fi
-      done
-      _info CLONING "$repo"
-      if $vclone
+    if [[ "$1" =~ "https://raw." ]]; then
+      zapwget "$1"
+    else
+      local repo=$(echo "$1" | rev | cut -d "/" -f1 | rev)
+      local vclone=false
+      if [ ! -d "$DEER_PLUG_DIR/$repo" ]
       then
-        $(git clone "$1" "$DEER_PLUG_DIR/$repo" > /dev/null 2>&1) || _die FAILED_TO_INSTALL "$repo"
-        _info INSTALLING "$repo"
-      else
-        if $(_deer_check_clone "$1"); then
-          $(git clone "$(deer_try_clone $1)$1" "$DEER_PLUG_DIR/$repo" > /dev/null 2>&1) || _die FAILED_TO_INSTALL "$repo"
+        for git_repo in "${ALLOWED_GIT[@]}"
+        do
+          if [[ "$1" =~ "\"$git_repo\"" ]]
+          then
+            vclone=true
+            break
+          fi
+        done
+        _info CLONING "$repo"
+        if $vclone
+        then
+          $(git clone "$1" "$DEER_PLUG_DIR/$repo" > /dev/null 2>&1) || _die FAILED_TO_INSTALL "$repo"
           _info INSTALLING "$repo"
         else
-          _die FAILED_TO_INSTALL "$repo"
+          if $(_deer_check_clone "$1"); then
+            $(git clone "$(deer_try_clone $1)$1" "$DEER_PLUG_DIR/$repo" > /dev/null 2>&1) || _die FAILED_TO_INSTALL "$repo"
+            _info INSTALLING "$repo"
+          else
+            _die FAILED_TO_INSTALL "$repo"
+          fi
         fi
       fi
+      _deer_source_file "$DEER_PLUG_DIR/$repo/$repo.plugin.zsh" || \
+        _deer_source_file "$DEER_PLUG_DIR/$repo/$repo.zsh"
     fi
-    _deer_source_file "$DEER_PLUG_DIR/$repo/$repo.plugin.zsh" || \
-      _deer_source_file "$DEER_PLUG_DIR/$repo/$repo.zsh"
   fi
+}
+
+function deerupdate() {
+  local tmpdir=$(pwd)
+  cd "$DEER_PLUG_DIR"
+  for dir in *
+  do
+    _info UPDATING "$dir"
+    cd "$dir" && git pull > /dev/null 2>&1
+    cd ..
+  done
+  cd "$tmpdir"
 }
